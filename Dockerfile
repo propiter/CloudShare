@@ -1,5 +1,5 @@
 # Etapa base para dependencias
-FROM node:18-alpine AS base
+FROM node:20-alpine AS base
 
 # Instalar dependencias solo cuando sea necesario
 FROM base AS deps
