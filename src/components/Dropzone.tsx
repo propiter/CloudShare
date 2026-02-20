@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback } from "react";
 import { useDropzone, FileRejection, DropEvent } from "react-dropzone";
-import { UploadCloud, File, X, CheckCircle, Loader2 } from "lucide-react";
+import { UploadCloud, File, X, CheckCircle, Loader2, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -10,10 +10,22 @@ interface DropzoneProps {
   onUploadComplete?: () => void;
 }
 
+const RETENTION_OPTIONS = [
+  { label: "Permanente", value: "" },
+  { label: "1 Día", value: "1d/" },
+  { label: "1 Semana", value: "7d/" },
+  { label: "15 Días", value: "15d/" },
+  { label: "1 Mes", value: "1m/" },
+  { label: "3 Meses", value: "3m/" },
+  { label: "6 Meses", value: "6m/" },
+  { label: "1 Año", value: "1y/" },
+];
+
 export function Dropzone({ onUploadComplete }: DropzoneProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [retention, setRetention] = useState("");
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setFiles((prev) => [...prev, ...acceptedFiles]);
@@ -43,6 +55,7 @@ export function Dropzone({ onUploadComplete }: DropzoneProps) {
               body: JSON.stringify({
                 filename: file.name,
                 contentType: file.type,
+                prefix: retention,
               }),
             });
 
@@ -70,6 +83,7 @@ export function Dropzone({ onUploadComplete }: DropzoneProps) {
             // Fallback: Subida vía Proxy
             const formData = new FormData();
             formData.append("file", file);
+            formData.append("prefix", retention);
 
             const proxyRes = await fetch("/api/proxy-upload", {
               method: "POST",
@@ -102,8 +116,8 @@ export function Dropzone({ onUploadComplete }: DropzoneProps) {
         if (onUploadComplete) onUploadComplete();
       }
     } catch (error) {
-      console.error("Upload process error:", error);
-      toast.error("An error occurred during upload");
+      console.error("Global upload error:", error);
+      toast.error("Something went wrong during upload");
     } finally {
       setUploading(false);
       setProgress(0);
@@ -113,9 +127,29 @@ export function Dropzone({ onUploadComplete }: DropzoneProps) {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
 
   return (
-    <div className="w-full max-w-2xl mx-auto space-y-4">
-      <div
-        {...getRootProps()}
+    <div className="w-full max-w-2xl mx-auto space-y-6">
+      <div className="flex flex-col gap-4 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div className="flex items-center justify-between">
+           <h3 className="text-lg font-medium text-gray-700">Subir Archivos</h3>
+           <div className="flex items-center gap-2">
+             <Clock className="w-4 h-4 text-gray-500" />
+             <select
+               value={retention}
+               onChange={(e) => setRetention(e.target.value)}
+               className="text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-gray-50 py-1 pl-2 pr-8"
+               disabled={uploading}
+             >
+               {RETENTION_OPTIONS.map((option) => (
+                 <option key={option.value} value={option.value}>
+                   {option.label}
+                 </option>
+               ))}
+             </select>
+           </div>
+        </div>
+
+        <div
+          {...getRootProps()}
         className={cn(
           "border-2 border-dashed rounded-lg p-10 text-center cursor-pointer transition-colors duration-200 ease-in-out",
           isDragActive

@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 
 export async function POST(request: Request) {
   try {
-    const { filename, contentType } = await request.json();
+    const { filename, contentType, prefix = "" } = await request.json();
 
     if (!filename || !contentType) {
       return NextResponse.json(
@@ -15,8 +15,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // Generar un nombre único para evitar colisiones
-    const uniqueFilename = `${uuidv4()}-${filename}`;
+    // Generar un nombre único para evitar colisiones, incluyendo el prefijo si existe
+    // El prefijo ya debe incluir el slash final si no es vacío (ej: "1d/")
+    const uniqueFilename = `${prefix}${uuidv4()}-${filename}`;
 
     const command = new PutObjectCommand({
       Bucket: R2_BUCKET_NAME,

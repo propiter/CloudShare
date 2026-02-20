@@ -11,7 +11,7 @@ export async function GET() {
 
     const response = await r2.send(command);
 
-    const files = response.Contents?.map((item) => ({
+    const files = response.Contents?.filter((item) => !item.Key?.endsWith("/")).map((item) => ({
       key: item.Key,
       lastModified: item.LastModified,
       size: item.Size,

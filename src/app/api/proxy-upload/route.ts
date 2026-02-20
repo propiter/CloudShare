@@ -7,13 +7,15 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File;
+    const prefix = (formData.get("prefix") as string) || "";
 
     if (!file) {
       return NextResponse.json({ error: "File is required" }, { status: 400 });
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const uniqueFilename = `${uuidv4()}-${file.name}`;
+    // El prefijo ya debe incluir el slash final si no es vacío
+    const uniqueFilename = `${prefix}${uuidv4()}-${file.name}`;
 
     const command = new PutObjectCommand({
       Bucket: R2_BUCKET_NAME,
