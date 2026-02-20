@@ -2,7 +2,6 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextResponse } from "next/server";
 import { r2, R2_BUCKET_NAME } from "@/lib/r2";
-import { v4 as uuidv4 } from "uuid";
 
 export async function POST(request: Request) {
   try {
@@ -16,8 +15,11 @@ export async function POST(request: Request) {
     }
 
     // Generar un nombre único para evitar colisiones, incluyendo el prefijo si existe
-    // El prefijo ya debe incluir el slash final si no es vacío (ej: "1d/")
-    const uniqueFilename = `${prefix}${uuidv4()}-${filename}`;
+    // Formato: [prefix/]ddMMyy-random-filename
+    const now = new Date();
+    const dateStr = `${now.getDate().toString().padStart(2, "0")}${(now.getMonth() + 1).toString().padStart(2, "0")}${now.getFullYear().toString().slice(-2)}`;
+    const randomSuffix = Math.random().toString(36).substring(2, 7);
+    const uniqueFilename = `${prefix}${dateStr}-${randomSuffix}-${filename}`;
 
     const command = new PutObjectCommand({
       Bucket: R2_BUCKET_NAME,

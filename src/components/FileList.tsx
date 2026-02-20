@@ -148,7 +148,13 @@ export function FileList({ refreshTrigger }: FileListProps) {
               
               <div className="p-3">
                 <p className="text-sm font-medium text-gray-900 truncate" title={file.key}>
-                  {file.key.split("-").slice(1).join("-") || file.key}
+                  {(() => {
+                     const filename = file.key.split("/").pop() || file.key;
+                     // Clean UUID prefix if present (legacy) or new short format (ddMMyy-random-)
+                     return filename
+                       .replace(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}-/, "") // Legacy UUID
+                       .replace(/^\d{6}-[a-z0-9]{5}-/, "") || filename; // New short format
+                   })()}
                 </p>
                 <div className="flex items-center justify-between mt-1">
                   <p className="text-xs text-gray-500">

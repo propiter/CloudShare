@@ -11,7 +11,6 @@ interface DropzoneProps {
 }
 
 const RETENTION_OPTIONS = [
-  { label: "Permanente", value: "" },
   { label: "1 Día", value: "1d/" },
   { label: "1 Semana", value: "7d/" },
   { label: "15 Días", value: "15d/" },
@@ -19,13 +18,14 @@ const RETENTION_OPTIONS = [
   { label: "3 Meses", value: "3m/" },
   { label: "6 Meses", value: "6m/" },
   { label: "1 Año", value: "1y/" },
+  { label: "Permanente", value: "" },
 ];
 
 export function Dropzone({ onUploadComplete }: DropzoneProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [retention, setRetention] = useState("");
+  const [retention, setRetention] = useState("1d/");
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setFiles((prev) => [...prev, ...acceptedFiles]);
