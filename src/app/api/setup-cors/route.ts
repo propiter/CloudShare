@@ -13,7 +13,7 @@ export async function GET() {
             AllowedMethods: ["PUT", "POST", "GET", "HEAD"],
             AllowedOrigins: ["*"], // En producción, limita esto a tu dominio
             ExposeHeaders: ["ETag"],
-            MaxAgeSeconds: 3000,
+            MaxAgeSeconds: 3001,
           },
         ],
       },

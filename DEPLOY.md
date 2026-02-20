@@ -29,11 +29,11 @@ Este proyecto está contenerizado para un despliegue rápido y sencillo usando D
    docker-compose up -d --build
    ```
 
-   Esto construirá la imagen optimizada de Next.js y arrancará el servicio en el puerto `3000`.
+   Esto construirá la imagen optimizada de Next.js y arrancará el servicio en el puerto `3001`.
 
 3. **Acceder a la aplicación:**
 
-   Abre tu navegador en: [http://localhost:3000](http://localhost:3000)
+   Abre tu navegador en: [http://localhost:3001](http://localhost:3001)
 
 ## Comandos Útiles
 
