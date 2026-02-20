@@ -241,6 +241,7 @@ export function Dropzone({ onUploadComplete }: DropzoneProps) {
           </button>
         </div>
       )}
+      </div>
     </div>
   );
 }
