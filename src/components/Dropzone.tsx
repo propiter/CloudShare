@@ -2,12 +2,19 @@
 
 import React, { useState, useCallback, useEffect } from "react";
 import { useDropzone, FileRejection, DropEvent } from "react-dropzone";
-import { UploadCloud, File, X, CheckCircle, Loader2, Clock, Image as ImageIcon, Film, FileText } from "lucide-react";
+import { UploadCloud, File, X, CheckCircle, Loader2, Clock, Image as ImageIcon, Film, FileText, Edit2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 interface DropzoneProps {
   onUploadComplete?: () => void;
+}
+
+interface FileWithMeta {
+  file: File;
+  id: string;
+  customName: string;
+  extension: string;
 }
 
 const RETENTION_OPTIONS = [
@@ -22,14 +29,27 @@ const RETENTION_OPTIONS = [
 ];
 
 export function Dropzone({ onUploadComplete }: DropzoneProps) {
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<FileWithMeta[]>([]);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [retention, setRetention] = useState("1d/");
   const [previews, setPreviews] = useState<Record<string, string>>({});
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    setFiles((prev) => [...prev, ...acceptedFiles]);
+    const newFiles = acceptedFiles.map(file => {
+      const lastDotIndex = file.name.lastIndexOf('.');
+      const name = lastDotIndex !== -1 ? file.name.slice(0, lastDotIndex) : file.name;
+      const extension = lastDotIndex !== -1 ? file.name.slice(lastDotIndex + 1) : '';
+      
+      return {
+        file,
+        id: Math.random().toString(36).substring(7),
+        customName: name,
+        extension
+      };
+    });
+
+    setFiles((prev) => [...prev, ...newFiles]);
     
     // Create previews for images
     acceptedFiles.forEach(file => {
@@ -47,16 +67,22 @@ export function Dropzone({ onUploadComplete }: DropzoneProps) {
     };
   }, [previews]);
 
-  const removeFile = (fileToRemove: File) => {
-    setFiles((prev) => prev.filter((file) => file !== fileToRemove));
-    if (previews[fileToRemove.name]) {
-      URL.revokeObjectURL(previews[fileToRemove.name]);
+  const removeFile = (idToRemove: string, fileName: string) => {
+    setFiles((prev) => prev.filter((f) => f.id !== idToRemove));
+    if (previews[fileName]) {
+      URL.revokeObjectURL(previews[fileName]);
       setPreviews(prev => {
         const newPreviews = { ...prev };
-        delete newPreviews[fileToRemove.name];
+        delete newPreviews[fileName];
         return newPreviews;
       });
     }
+  };
+
+  const updateFileName = (id: string, newName: string) => {
+    setFiles(prev => prev.map(f => 
+      f.id === id ? { ...f, customName: newName } : f
+    ));
   };
 
   const uploadFiles = async () => {
@@ -67,7 +93,10 @@ export function Dropzone({ onUploadComplete }: DropzoneProps) {
     let completedCount = 0;
 
     try {
-      const uploadPromises = files.map(async (file) => {
+      const uploadPromises = files.map(async (fileMeta) => {
+        const { file, customName, extension } = fileMeta;
+        const finalFilename = extension ? `${customName}.${extension}` : customName;
+
         try {
           try {
             // 1. Get Presigned URL
@@ -75,7 +104,7 @@ export function Dropzone({ onUploadComplete }: DropzoneProps) {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                filename: file.name,
+                filename: finalFilename,
                 contentType: file.type,
                 prefix: retention,
               }),
@@ -104,7 +133,7 @@ export function Dropzone({ onUploadComplete }: DropzoneProps) {
             
             // Fallback: Proxy Upload
             const formData = new FormData();
-            formData.append("file", file);
+            formData.append("file", file, finalFilename); // Pass final filename
             formData.append("prefix", retention);
 
             const proxyRes = await fetch("/api/proxy-upload", {
@@ -228,25 +257,38 @@ export function Dropzone({ onUploadComplete }: DropzoneProps) {
             </div>
             
             <div className="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-              {files.map((file, idx) => (
+              {files.map((fileMeta, idx) => (
                 <div
-                  key={`${file.name}-${idx}`}
+                  key={`${fileMeta.id}`}
                   className="flex items-center justify-between p-3 bg-gray-50 rounded-lg group hover:bg-gray-100 transition-colors border border-transparent hover:border-gray-200"
                 >
-                  <div className="flex items-center space-x-3 overflow-hidden">
+                  <div className="flex items-center space-x-3 overflow-hidden flex-1">
                     <div className="h-10 w-10 flex-shrink-0 rounded-md overflow-hidden bg-gray-200 flex items-center justify-center">
-                      {previews[file.name] ? (
-                        <img src={previews[file.name]} alt={file.name} className="h-full w-full object-cover" />
+                      {previews[fileMeta.file.name] ? (
+                        <img src={previews[fileMeta.file.name]} alt={fileMeta.file.name} className="h-full w-full object-cover" />
                       ) : (
-                        getFileIcon(file)
+                        getFileIcon(fileMeta.file)
                       )}
                     </div>
-                    <div className="truncate">
-                      <p className="text-sm font-medium text-gray-800 truncate" title={file.name}>
-                        {file.name}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {(file.size / 1024 / 1024).toFixed(2)} MB
+                    <div className="min-w-0 flex-1 mr-2">
+                      <div className="flex items-center gap-0.5">
+                        <input
+                          type="text"
+                          value={fileMeta.customName}
+                          onChange={(e) => updateFileName(fileMeta.id, e.target.value)}
+                          className="text-sm font-medium text-gray-800 bg-transparent border-b border-dashed border-gray-300 focus:border-blue-500 focus:ring-0 focus:outline-none w-full min-w-0 px-0 py-0.5 hover:border-gray-400 transition-colors"
+                          disabled={uploading}
+                          placeholder="Nombre del archivo"
+                        />
+                        {fileMeta.extension && (
+                          <span className="text-sm text-gray-500 flex-shrink-0 select-none">
+                            .{fileMeta.extension}
+                          </span>
+                        )}
+                        <Edit2 className="h-3 w-3 text-gray-400 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {(fileMeta.file.size / 1024 / 1024).toFixed(2)} MB
                       </p>
                     </div>
                   </div>
@@ -255,15 +297,15 @@ export function Dropzone({ onUploadComplete }: DropzoneProps) {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        removeFile(file);
+                        removeFile(fileMeta.id, fileMeta.file.name);
                       }}
-                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all opacity-0 group-hover:opacity-100"
+                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all opacity-0 group-hover:opacity-100 flex-shrink-0"
                       title="Eliminar archivo"
                     >
                       <X className="h-4 w-4" />
                     </button>
                   ) : (
-                    <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                    <Loader2 className="h-4 w-4 animate-spin text-blue-500 flex-shrink-0" />
                   )}
                 </div>
               ))}

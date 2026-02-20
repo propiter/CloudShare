@@ -209,10 +209,10 @@ export function FileList({ refreshTrigger }: FileListProps) {
         </div>
 
         {/* Filters Bar */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col lg:flex-row gap-4">
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4">
           
           {/* Search */}
-          <div className="relative flex-1 min-w-[200px]">
+          <div className="relative w-full md:flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input 
               type="text" 
@@ -223,55 +223,60 @@ export function FileList({ refreshTrigger }: FileListProps) {
             />
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
              {/* Type Filters */}
-            <div className="flex items-center space-x-1 bg-gray-50 p-1 rounded-lg overflow-x-auto">
-              {(["all", "image", "video", "document"] as const).map((type) => (
-                <button
-                  key={type}
-                  onClick={() => setTypeFilter(type)}
-                  className={cn(
-                    "px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap",
-                    typeFilter === type
-                      ? "bg-white text-blue-600 shadow-sm ring-1 ring-black/5"
-                      : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-                  )}
+            <div className="w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 -mx-4 sm:mx-0 px-4 sm:px-0 scrollbar-hide">
+              <div className="flex items-center space-x-1 bg-gray-50 p-1 rounded-lg min-w-max">
+                {(["all", "image", "video", "document"] as const).map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => setTypeFilter(type)}
+                    className={cn(
+                      "px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap",
+                      typeFilter === type
+                        ? "bg-white text-blue-600 shadow-sm ring-1 ring-black/5"
+                        : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                    )}
+                  >
+                    {type === "all" ? "Todos" : type.charAt(0).toUpperCase() + type.slice(1) + "s"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Dropdowns */}
+            <div className="grid grid-cols-2 sm:flex items-center gap-3 w-full sm:w-auto">
+              {/* Date Filter */}
+              <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-2 py-1.5 hover:border-gray-300 transition-colors w-full sm:w-auto min-w-[140px]">
+                <Filter className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                <select
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value as DateFilter)}
+                  className="text-sm border-none bg-transparent focus:ring-0 text-gray-600 cursor-pointer p-0 w-full truncate"
                 >
-                  {type === "all" ? "Todos" : type.charAt(0).toUpperCase() + type.slice(1) + "s"}
-                </button>
-              ))}
-            </div>
+                  <option value="all">Cualquier fecha</option>
+                  <option value="today">Hoy</option>
+                  <option value="week">Esta semana</option>
+                  <option value="month">Este mes</option>
+                </select>
+              </div>
 
-            {/* Date Filter */}
-            <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-2 py-1.5 hover:border-gray-300 transition-colors">
-              <Filter className="h-4 w-4 text-gray-400" />
-              <select
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value as DateFilter)}
-                className="text-sm border-none bg-transparent focus:ring-0 text-gray-600 cursor-pointer p-0 pr-6"
-              >
-                <option value="all">Cualquier fecha</option>
-                <option value="today">Hoy</option>
-                <option value="week">Esta semana</option>
-                <option value="month">Este mes</option>
-              </select>
-            </div>
-
-            {/* Sort Filter */}
-            <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-2 py-1.5 hover:border-gray-300 transition-colors">
-              <ArrowUpDown className="h-4 w-4 text-gray-400" />
-              <select
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value as SortOrder)}
-                className="text-sm border-none bg-transparent focus:ring-0 text-gray-600 cursor-pointer p-0 pr-6"
-              >
-                <option value="date-desc">Más recientes</option>
-                <option value="date-asc">Más antiguos</option>
-                <option value="name-asc">Nombre (A-Z)</option>
-                <option value="name-desc">Nombre (Z-A)</option>
-                <option value="size-desc">Tamaño (Mayor)</option>
-                <option value="size-asc">Tamaño (Menor)</option>
-              </select>
+              {/* Sort Filter */}
+              <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-2 py-1.5 hover:border-gray-300 transition-colors w-full sm:w-auto min-w-[140px]">
+                <ArrowUpDown className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                <select
+                  value={sortOrder}
+                  onChange={(e) => setSortOrder(e.target.value as SortOrder)}
+                  className="text-sm border-none bg-transparent focus:ring-0 text-gray-600 cursor-pointer p-0 w-full truncate"
+                >
+                  <option value="date-desc">Más recientes</option>
+                  <option value="date-asc">Más antiguos</option>
+                  <option value="name-asc">Nombre (A-Z)</option>
+                  <option value="name-desc">Nombre (Z-A)</option>
+                  <option value="size-desc">Tamaño (Mayor)</option>
+                  <option value="size-asc">Tamaño (Menor)</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
