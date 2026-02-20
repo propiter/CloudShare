@@ -37,8 +37,8 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/public ./public
 
 # Configurar permisos correctos para caché de prerenderizado
-mkdir .next
-chown nextjs:nodejs .next
+RUN mkdir .next
+RUN chown nextjs:nodejs .next
 
 # Copiar automáticamente la salida standalone optimizada
 # https://nextjs.org/docs/advanced-features/output-file-tracing
