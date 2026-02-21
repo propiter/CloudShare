@@ -15,7 +15,8 @@ export async function GET() {
       key: item.Key,
       lastModified: item.LastModified,
       size: item.Size,
-      url: `${R2_PUBLIC_URL}/${item.Key}`,
+      // Codificar correctamente cada segmento de la URL para manejar espacios y caracteres especiales
+      url: `${R2_PUBLIC_URL}/${item.Key?.split('/').map(encodeURIComponent).join('/')}`,
     })) || [];
 
     // Ordenar por fecha de modificación descendente
